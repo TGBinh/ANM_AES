@@ -1,5 +1,5 @@
 # login.py
-
+import streamlit as st
 import bcrypt
 import pyodbc
 
@@ -11,7 +11,7 @@ password = ''
 
 connection_string = f'DRIVER={{SQL SERVER}};SERVER={server};DATABASE={database};UID={username};PWD={password}'
 
-def login(username_input, password_input):
+def authenticate_user(username_input, password_input):
     try:
         # Kết nối đến cơ sở dữ liệu
         conn = pyodbc.connect(connection_string)
@@ -23,22 +23,21 @@ def login(username_input, password_input):
 
         if row:
             stored_hashed_password = row[0]  # Mật khẩu đã mã hóa trong cơ sở dữ liệu
-            user_role = row[1]  # Lấy vai trò người dùng
+            user_role = row[1]  # Vai trò người dùng
 
             # So sánh mật khẩu người dùng nhập với mật khẩu đã mã hóa trong cơ sở dữ liệu
             if bcrypt.checkpw(password_input.encode('utf-8'), stored_hashed_password.encode('utf-8')):
-                print(f"Đăng nhập thành công! Vai trò: {user_role}")
-                return True
+                return True, user_role
             else:
-                print("Mật khẩu không đúng!")
-                return False
+                return False, "Mật khẩu không đúng!"
         else:
-            print("Tên người dùng không tồn tại!")
-            return False
+            return False, "Tên người dùng không tồn tại!"
 
     except pyodbc.Error as e:
-        print(f"Lỗi kết nối cơ sở dữ liệu: {e}")
-        return False
+        return False, f"Lỗi kết nối cơ sở dữ liệu: {e}"
+
     finally:
         if conn:
             conn.close()
+
+
